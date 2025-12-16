@@ -9,7 +9,7 @@ services:
     envVars:
       - key: MONGO_URI
         scope: run
-        value: ""
+        value: "mongodb+srv://andregerardi3:nxzsRUOe5SJQqSoT@lat-long-superacao.vs4vhop.mongodb.net/?appName=lat-long-superacao"
       - key: MONGO_DB
         scope: run
         value: lat-long-superacao
