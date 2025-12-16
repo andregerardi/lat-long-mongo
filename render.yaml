@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: lat-long-mongo
+    env: python
+    region: ohio
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app-mongo:app
+    envVars:
+      - key: MONGO_URI
+        scope: run
+        value: ""
+      - key: MONGO_DB
+        scope: run
+        value: lat-long-superacao
+      - key: MONGO_COLLECTION
+        scope: run
+        value: locations
+      - key: FLASK_DEBUG
+        scope: run
+        value: "0"
