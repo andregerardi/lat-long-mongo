@@ -4,7 +4,10 @@ from datetime import datetime, timezone
 from pymongo import MongoClient
 from bson import ObjectId
 import os
+from dotenv import load_dotenv
 
+# Carregar variáveis do arquivo .env (desenvolvimento local)
+load_dotenv()
 
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
@@ -13,6 +16,7 @@ app = Flask(__name__, static_folder="static", static_url_path="/static")
 # IMPORTANTE: Configure MONGO_URI como variável de ambiente!
 # Nunca commite credenciais no código!
 MONGO_URI = os.getenv("MONGO_URI")
+
 if not MONGO_URI:
     raise ValueError("❌ MONGO_URI não configurada! Configure a variável de ambiente.")
 
