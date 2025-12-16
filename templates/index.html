@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📍 Capturador GPS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #0066cc;
+            padding-bottom: 10px;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #0066cc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 0.95em;
+        }
+        
+        .button-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 102, 204, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 30px;
+        }
+        
+        .status.success {
+            background: #c8e6c9;
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+        
+        .status.error {
+            background: #ffcdd2;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+        
+        .status.info {
+            background: #bbdefb;
+            color: #1565c0;
+            border: 1px solid #42a5f5;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+        }
+        
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            background-color: white;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #0066cc;
+            box-shadow: 0 0 5px rgba(0, 102, 204, 0.3);
+        }
+        
+        select:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .map-container {
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            height: 400px;
+        }
+        
+        #map {
+            height: 100%;
+        }
+        
+        .data-display {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .tab-btn {
+            background: none;
+            border: none;
+            color: #666;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab-btn.active {
+            color: #0066cc;
+            border-bottom-color: #0066cc;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .locations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .locations-table th {
+            background: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .locations-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9em;
+        }
+        
+        .locations-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .delete-btn {
+            background: #f44336;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+        
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        
+        @media (max-width: 600px) {
+            .form-row, .form-row-3 {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.5em;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📍 GPS Superação </h1>
+            <p>Captura a localização de agentes</p>
+        </div>
+        
+        <div class="content">
+            <!-- TABS -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchTab(event, 'capture')">📍 Capturar</button>
+                <button class="tab-btn" onclick="switchTab(event, 'history')">📊 Histórico</button>
+                <button class="tab-btn" onclick="switchTab(event, 'about')">ℹ️ Sobre</button>
+            </div>
+            
+            <!-- TAB CAPTURAR -->
+            <div id="capture" class="tab-content active">
+                <div class="section">
+                    <h2>📍 Capture sua Localização</h2>
+                    
+                    <div class="info-box">
+                        ⚠️ <strong>IMPORTANTE:</strong> Certifique-se de que o GPS está ATIVADO no seu Android e permita acesso ao site!
+                    </div>
+                    
+                    <div class="button-container">
+                        <button id="captureBtn" onclick="captureLocation()">
+                            📍 CAPTURAR LOCALIZAÇÃO
+                        </button>
+                    </div>
+                    
+                    <div id="status"></div>
+                    <div id="coordinates" class="data-display" style="display: none;"></div>
+                </div>
+                
+                <div class="section">
+                    <h2>Dados Capturados</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Latitude</label>
+                            <input type="number" id="latitude" step="0.000001" placeholder="Ex: -23.550520">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude</label>
+                            <input type="number" id="longitude" step="0.000001" placeholder="Ex: -46.633309">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>🏘️ Município</label>
+                        <select id="municipio" onchange="atualizarAgentes()">
+                            <option value="">Selecione um município...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>👤 Agente</label>
+                        <select id="userName">
+                            <option value="">Selecione o agente...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Descrição/Observações</label>
+                        <textarea id="description" placeholder="Adicione informações sobre este ponto..."></textarea>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <button onclick="saveLocation()">💾 Salvar Localização</button>
+                        <button onclick="clearFields()" style="background: #666;">🔄 Limpar Campos</button>
+                    </div>
+                    
+                    <div id="mapContainer" class="map-container" style="display: none;">
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB HISTÓRICO -->
+            <div id="history" class="tab-content">
+                <div class="section">
+                    <h2>📊 Histórico de Localizações</h2>
+                    
+                    <button onclick="loadLocations()" style="margin-bottom: 15px;">🔄 Recarregar</button>
+                    
+                    <div id="historyCONTENT">
+                        <p style="text-align: center; color: #999;">Carregando...</p>
+                    </div>
+                    
+                    <div id="mapHistoryContainer" class="map-container" style="display: none; margin-top: 20px;">
+                        <div id="mapHistory"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TAB SOBRE -->
+            <div id="about" class="tab-content">
+                <div class="section">
+                    <h2>ℹ️ Informações</h2>
+                    
+                    <h3 style="margin-top: 15px; margin-bottom: 10px;">🚀 Como Usar</h3>
+                    <ol style="margin-left: 20px; line-height: 1.8;">
+                        <li><strong>Acesse via Android:</strong> Abra este aplicativo em um navegador no seu celular Android</li>
+                        <li><strong>Ative o GPS:</strong> Certifique-se que o GPS está ativado no seu dispositivo</li>
+                        <li><strong>Permita Localização:</strong> O navegador solicitará permissão para acessar sua localização</li>
+                        <li><strong>Clique no Botão:</strong> Pressione "📍 CAPTURAR LOCALIZAÇÃO"</li>
+                        <li><strong>Salve os Dados:</strong> Clique em "💾 Salvar Localização"</li>
+                    </ol>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 10px;">📊 Recursos</h3>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li>✅ Captura de GPS em tempo real do Android</li>
+                        <li>✅ Visualização em mapa interativo</li>
+                        <li>✅ Armazenamento em banco de dados</li>
+                        <li>✅ Histórico completo de localizações</li>
+                        <li>✅ Suporte a múltiplos usuários</li>
+                        <li>✅ Precisão e altitude capturadas</li>
+                    </ul>
+                    
+                    <h3 style="margin-top: 20px; margin-bottom: 10px;">📱 Compatibilidade</h3>
+                    <ul style="margin-left: 20px; line-height: 1.8;">
+                        <li>✅ Android 6.0+</li>
+                        <li>✅ iOS 14+</li>
+                        <li>✅ Qualquer navegador moderno</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leaflet -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <script>
+        let map = null;
+        let mapHistory = null;
+        let currentMarker = null;
+        let currentCircle = null;
+        let municipiosAgentes = {};
+        let lastAccuracy = null;
+        
+        // Carregar dados dos agentes ao iniciar a página
+        async function carregarMunicipios() {
+            try {
+                const response = await fetch('/static/municipios_agentes.json');
+                municipiosAgentes = await response.json();
+                
+                const selectMunicipio = document.getElementById('municipio');
+                Object.keys(municipiosAgentes).sort().forEach(municipio => {
+                    const option = document.createElement('option');
+                    option.value = municipio;
+                    option.textContent = municipio;
+                    selectMunicipio.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar municípios:', error);
+            }
+        }
+        
+        // Atualizar lista de agentes quando município muda
+        function atualizarAgentes() {
+            const municipioSelecionado = document.getElementById('municipio').value;
+            const selectAgente = document.getElementById('userName');
+            
+            // Limpar opções anteriores
+            selectAgente.innerHTML = '<option value="">Selecione o agente...</option>';
+            
+            if (municipioSelecionado && municipiosAgentes[municipioSelecionado]) {
+                const agentes = municipiosAgentes[municipioSelecionado];
+                agentes.forEach(agente => {
+                    const option = document.createElement('option');
+                    option.value = agente;
+                    option.textContent = agente;
+                    selectAgente.appendChild(option);
+                });
+            }
+        }
+        
+        // Inicializar ao carregar a página
+        window.addEventListener('DOMContentLoaded', carregarMunicipios);
+        
+        // ==================== FUNÇÕES DE TAB ====================
+        function switchTab(evt, tabName) {
+            // Ocultar todos os tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Mostrar tab selecionada
+            document.getElementById(tabName).classList.add('active');
+            if (evt && evt.target) {
+                evt.target.classList.add('active');
+            }
+            
+            // Se for histórico, carregar dados
+            if (tabName === 'history') {
+                loadLocations();
+            }
+        }
+        
+        // ==================== CAPTURAR GPS ====================
+        function captureLocation() {
+            const btn = document.getElementById('captureBtn');
+            const statusDiv = document.getElementById('status');
+            const coordsDiv = document.getElementById('coordinates');
+            
+            btn.disabled = true;
+            statusDiv.innerHTML = '<div class="status info">⏳ Capturando localização...</div>';
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        const accuracy = position.coords.accuracy || 0;
+                        lastAccuracy = accuracy;
+                        
+                        // Preencher campos
+                        document.getElementById('latitude').value = lat.toFixed(6);
+                        document.getElementById('longitude').value = lon.toFixed(6);
+                        
+                        // Status
+                        statusDiv.innerHTML = '<div class="status success">✓ Localização capturada com sucesso!</div>';
+                        coordsDiv.innerHTML = `<strong>Latitude:</strong> ${lat.toFixed(6)}<br><strong>Longitude:</strong> ${lon.toFixed(6)}<br><strong>Precisão:</strong> ±${accuracy.toFixed(0)}m`;
+                        coordsDiv.style.display = 'block';
+                        
+                        // Mostrar mapa
+                        setTimeout(() => {
+                            showMap(lat, lon, accuracy);
+                        }, 500);
+                        
+                        btn.disabled = false;
+                    },
+                    function(error) {
+                        let errorMsg = 'Erro ao capturar localização';
+                        if (error.code === 1) {
+                            errorMsg = 'Permissão negada! Ative o acesso ao GPS nas configurações do navegador.';
+                        } else if (error.code === 2) {
+                            errorMsg = 'Posição indisponível. Tente ativar o GPS.';
+                        } else if (error.code === 3) {
+                            errorMsg = 'Tempo limite excedido. Tente novamente.';
+                        }
+                        
+                        statusDiv.innerHTML = `<div class="status error">✗ ${errorMsg}</div>`;
+                        btn.disabled = false;
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                statusDiv.innerHTML = '<div class="status error">✗ Geolocalização não suportada neste navegador!</div>';
+                btn.disabled = false;
+            }
+        }
+        
+        // ==================== MAPA ====================
+        function showMap(lat, lon, accuracy) {
+            const mapContainer = document.getElementById('mapContainer');
+            mapContainer.style.display = 'block';
+            
+            if (!map) {
+                map = L.map('map').setView([lat, lon], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            } else {
+                map.setView([lat, lon], 15);
+            }
+            
+            // Remover marcador anterior
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            if (currentCircle) {
+                map.removeLayer(currentCircle);
+            }
+            
+            // Novo marcador
+            currentMarker = L.marker([lat, lon]).addTo(map)
+                .bindPopup(`<b>Latitude:</b> ${lat.toFixed(6)}<br><b>Longitude:</b> ${lon.toFixed(6)}`)
+                .openPopup();
+            
+            // Círculo de precisão
+            if (accuracy > 0) {
+                currentCircle = L.circle([lat, lon], {
+                    radius: accuracy,
+                    color: 'blue',
+                    fillColor: 'lightblue',
+                    fillOpacity: 0.3,
+                    popup: `Precisão: ±${accuracy.toFixed(0)}m`
+                }).addTo(map);
+            }
+        }
+        
+        // ==================== SALVAR ====================
+        function saveLocation() {
+            const lat = document.getElementById('latitude').value;
+            const lon = document.getElementById('longitude').value;
+            const municipio = document.getElementById('municipio').value;
+            const agentName = document.getElementById('userName').value || 'Anônimo';
+            
+            if (!lat || !lon || Number(lat) === 0 || Number(lon) === 0) {
+                alert('❌ Por favor, capture uma localização válida!');
+                return;
+            }
+            
+            const data = {
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lon),
+                accuracy: lastAccuracy,
+                altitude: null,
+                speed: null,
+                agent_name: agentName,
+                municipio,
+                observacoes: document.getElementById('description').value || ''
+            };
+            
+            fetch('/api/save-location', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    alert('✅ Localização salva com sucesso!');
+                    clearFields();
+                    loadLocations();
+                } else {
+                    alert('❌ Erro ao salvar: ' + data.message);
+                }
+            })
+            .catch(err => alert('❌ Erro: ' + err));
+        }
+        
+        // ==================== LIMPAR ====================
+        function clearFields() {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('municipio').value = '';
+            document.getElementById('userName').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('coordinates').style.display = 'none';
+            document.getElementById('mapContainer').style.display = 'none';
+            lastAccuracy = null;
+        }
+        
+        // ==================== HISTÓRICO ====================
+        function loadLocations() {
+            fetch('/api/get-locations')
+            .then(res => res.json())
+            .then(locations => {
+                const container = document.getElementById('historyCONTENT');
+                
+                if (locations.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #999;">Nenhuma localização capturada ainda.</p>';
+                    return;
+                }
+                
+                let html = '<table class="locations-table"><thead><tr>';
+                html += '<th>Data/Hora</th><th>Município</th><th>Agente</th><th>Latitude</th><th>Longitude</th><th>Obs.</th><th>Ação</th>';
+                html += '</tr></thead><tbody>';
+                
+                locations.forEach(loc => {
+                    html += '<tr>';
+                    html += `<td>${loc.timestamp ? new Date(loc.timestamp).toLocaleString('pt-BR') : '-'}</td>`;
+                    html += `<td>${loc.municipio || '-'}</td>`;
+                    html += `<td>${loc.agent_name || 'Anônimo'}</td>`;
+                    html += `<td>${parseFloat(loc.latitude).toFixed(6)}</td>`;
+                    html += `<td>${parseFloat(loc.longitude).toFixed(6)}</td>`;
+                    html += `<td>${loc.observacoes || ''}</td>`;
+                    html += `<td><button class="delete-btn" onclick="deleteLocation('${loc.id}')">Deletar</button></td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table>';
+                container.innerHTML = html;
+                
+                // Mostrar mapa com todas as localizações
+                setTimeout(() => {
+                    showHistoryMap(locations);
+                }, 500);
+            })
+            .catch(err => {
+                document.getElementById('historyCONTENT').innerHTML = '<p style="color: red;">Erro ao carregar histórico: ' + err + '</p>';
+            });
+        }
+        
+        function showHistoryMap(locations) {
+            const mapContainer = document.getElementById('mapHistoryContainer');
+            mapContainer.style.display = 'block';
+            
+            const centerLat = locations.reduce((sum, loc) => sum + parseFloat(loc.latitude), 0) / locations.length;
+            const centerLon = locations.reduce((sum, loc) => sum + parseFloat(loc.longitude), 0) / locations.length;
+            
+            if (!mapHistory) {
+                mapHistory = L.map('mapHistory').setView([centerLat, centerLon], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(mapHistory);
+            } else {
+                mapHistory.setView([centerLat, centerLon], 12);
+                mapHistory.eachLayer(layer => {
+                    if (layer instanceof L.Marker || layer instanceof L.Circle || layer instanceof L.CircleMarker) {
+                        mapHistory.removeLayer(layer);
+                    }
+                });
+            }
+            
+            const colors = ['red', 'blue', 'green', 'purple', 'orange'];
+            const users = [...new Set(locations.map(l => l.agent_name))];
+            const colorMap = {};
+            users.forEach((user, i) => {
+                colorMap[user] = colors[i % colors.length] || 'blue';
+            });
+            
+            locations.forEach(loc => {
+                const markerColor = colorMap[loc.agent_name] || 'blue';
+                L.marker([parseFloat(loc.latitude), parseFloat(loc.longitude)], {
+                    icon: L.icon({
+                        iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-${markerColor}.png`,
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                    })
+                }).bindPopup(`<b>${loc.agent_name}</b><br>${loc.timestamp ? new Date(loc.timestamp).toLocaleString('pt-BR') : ''}<br>${loc.observacoes || ''}`).addTo(mapHistory);
+            });
+        }
+        
+        function deleteLocation(id) {
+            if (confirm('Tem certeza que deseja deletar esta localização?')) {
+                fetch(`/api/delete-location/${id}`, {method: 'DELETE'})
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        loadLocations();
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
