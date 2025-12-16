@@ -54,3 +54,6 @@ logs/
 
 # Render
 .render/
+
+# Notebooks com credenciais
+*.ipynb

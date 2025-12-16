@@ -6,15 +6,15 @@ from bson import ObjectId
 import os
 from dotenv import load_dotenv
 
-# Carregar variáveis do arquivo .env (desenvolvimento local)
-load_dotenv()
-
 app = Flask(__name__, static_folder="static", static_url_path="/static")
 
 
 # ==================== MONGODB ====================
 # IMPORTANTE: Configure MONGO_URI como variável de ambiente!
 # Nunca commite credenciais no código!
+
+# Carregar variáveis do arquivo .env (desenvolvimento local)
+load_dotenv()
 MONGO_URI = os.getenv("MONGO_URI")
 
 if not MONGO_URI:
