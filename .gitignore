@@ -1,5 +1,6 @@
 # Variáveis de ambiente
 .env
+.env.example
 .env.local
 .env*.local
 
